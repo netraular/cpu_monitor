@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
 import psutil
 import time
 import threading
@@ -35,6 +35,9 @@ class CPUMonitorApp:
         self.csv_writer = None
         self.log_filename = ""
         
+        # Nueva variable para datos cargados
+        self.loaded_data = None
+        
         # Crear la interfaz
         self.create_widgets()
         
@@ -63,6 +66,9 @@ class CPUMonitorApp:
         # Pestaña de gráficas
         self.graphs_frame = ttk.Frame(self.notebook)
         self.notebook.add(self.graphs_frame, text="Gráficas")
+        
+        # Nueva pestaña para cargar logs
+        self.setup_load_logs_tab()
         
         # Configurar pestaña de monitor
         self.setup_monitor_tab()
@@ -247,6 +253,126 @@ class CPUMonitorApp:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graphs_frame)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    
+    def setup_load_logs_tab(self):
+        # Frame para la pestaña de cargar logs
+        self.load_logs_frame = ttk.Frame(self.notebook)
+        self.notebook.add(self.load_logs_frame, text="Cargar Logs")
+        
+        # Controles para cargar archivo
+        control_frame = tk.Frame(self.load_logs_frame)
+        control_frame.pack(fill=tk.X, padx=10, pady=10)
+        
+        btn_load = tk.Button(
+            control_frame,
+            text="Seleccionar CSV",
+            command=self.load_csv_file,
+            bg="#3498db",
+            fg="white"
+        )
+        btn_load.pack(side=tk.LEFT, padx=5)
+        
+        self.lbl_filename = tk.Label(
+            control_frame,
+            text="Ningún archivo seleccionado",
+            fg="#666"
+        )
+        self.lbl_filename.pack(side=tk.LEFT, padx=10)
+        
+        btn_plot = tk.Button(
+            control_frame,
+            text="Mostrar Gráficas",
+            command=self.plot_loaded_data,
+            bg="#2ecc71",
+            fg="white",
+            state=tk.DISABLED
+        )
+        btn_plot.pack(side=tk.LEFT, padx=5)
+        self.btn_plot = btn_plot
+        
+        # Canvas para gráficas cargadas
+        self.loaded_fig = plt.figure(figsize=(10, 8), dpi=100)
+        self.loaded_canvas = FigureCanvasTkAgg(self.loaded_fig, master=self.load_logs_frame)
+        self.loaded_canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+    
+    def load_csv_file(self):
+        filepath = filedialog.askopenfilename(
+            filetypes=[("CSV Files", "*.csv")],
+            title="Seleccionar archivo de log"
+        )
+        
+        if filepath:
+            self.lbl_filename.config(text=os.path.basename(filepath))
+            self.btn_plot.config(state=tk.NORMAL)
+            self.loaded_data = self.parse_csv(filepath)
+            
+    def parse_csv(self, filepath):
+        data = {
+            'timestamps': [],
+            'total_cpu': [],
+            'per_cpu': []
+        }
+        
+        with open(filepath, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                data['timestamps'].append(
+                    datetime.datetime.strptime(row['Timestamp'], "%Y-%m-%d %H:%M:%S.%f")
+                )
+                data['total_cpu'].append(float(row['CPU_Total']))
+                
+                # Obtener datos por thread
+                thread_data = []
+                for i in range(self.num_threads):
+                    thread_data.append(float(row[f'Thread_{i}']))
+                data['per_cpu'].append(thread_data)
+                
+        return data
+    
+    def plot_loaded_data(self):
+        if not self.loaded_data:
+            return
+            
+        self.loaded_fig.clf()
+        
+        # Gráfica de CPU total
+        ax1 = self.loaded_fig.add_subplot(211)
+        ax1.plot(
+            self.loaded_data['timestamps'],
+            self.loaded_data['total_cpu'],
+            'b-',
+            linewidth=1.5
+        )
+        ax1.set_title('Uso Total de CPU (Histórico)')
+        ax1.set_ylabel('Uso (%)')
+        ax1.grid(True, linestyle='--', alpha=0.7)
+        
+        # Gráfica de CPU por thread
+        ax2 = self.loaded_fig.add_subplot(212)
+        for i in range(self.num_threads):
+            thread_data = [x[i] for x in self.loaded_data['per_cpu']]
+            ax2.plot(
+                self.loaded_data['timestamps'],
+                thread_data,
+                label=f'Thread {i}',
+                linewidth=1,
+                alpha=0.7
+            )
+        ax2.set_title('Uso por Thread (Histórico)')
+        ax2.set_ylabel('Uso (%)')
+        ax2.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), 
+                 ncol=4, fancybox=True, shadow=True)
+        ax2.grid(True, linestyle='--', alpha=0.7)
+        
+        # Formatear ejes de tiempo
+        for ax in [ax1, ax2]:
+            ax.xaxis.set_major_formatter(
+                plt.matplotlib.dates.DateFormatter('%H:%M:%S')
+            )
+            plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+            
+        self.loaded_fig.tight_layout()
+        self.loaded_canvas.draw()
     
     def start_logging(self):
         """Inicia el registro de datos en un archivo CSV"""
