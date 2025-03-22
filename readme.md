@@ -1,7 +1,5 @@
 # CPU Usage Monitor with Graphs
 
-![Application Banner](banner.png) <!-- Add a general banner image -->
-
 Graphical application to monitor CPU usage in real-time, log historical data, and visualize metrics. Ideal for performance analysis and stress testing.
 
 ---
@@ -9,7 +7,7 @@ Graphical application to monitor CPU usage in real-time, log historical data, an
 ## 📸 Screenshots
 
 ### 1. Main Panel (Real-Time Monitoring)
-![Main Panel](readme_images/screenshot_monitor.png) <!-- Add real image -->
+![Main Panel](readme_images/screenshot_monitor.png)
 - **Visible Features**:
   - Total CPU usage percentage with color coding
   - Updatable line graph
@@ -17,8 +15,7 @@ Graphical application to monitor CPU usage in real-time, log historical data, an
   - Log control buttons
 
 ### 2. Graphs Tab
-![Real-Time Graphs](readme_images/screenshot_graphs.png) <!-- Add real image -->
-- **Highlighted Content**:
+![Real-Time Graphs](readme_images/screenshot_graphs.png)
   - Top graph: Evolution of total usage
   - Bottom graph: Breakdown by threads
   - Interactive time axes
@@ -43,12 +40,10 @@ https://silver.urih.com/
 
 **How to Use**:
 1. Open the link in Chrome
-2. Select the load intensity (e.g., 80%)
-3. Run the test while monitoring in the application
-4. Compare real-time vs historical results
+2. Run the test while monitoring in the application
+3. Compare real-time vs historical results
 
-![Stress Test Example](readme_images/stress_test.png) <!-- Optional image of the testing website -->
-
+![Stress Test Example](readme_images/stress_test.png)
 ---
 
 ## 🔄 Recommended Workflow
