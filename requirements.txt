@@ -1,0 +1,8 @@
+# Required dependencies for the CPU Usage Monitor with Graphs application
+
+psutil>=5.7.0          # For retrieving system metrics
+matplotlib>=3.3.0      # For generating graphs
+numpy>=1.19.0          # Matplotlib dependency (for numerical calculations)
+
+# Install all dependencies with:
+# pip install -r requirements.txt
